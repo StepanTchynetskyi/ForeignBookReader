@@ -1,0 +1,3 @@
+[submodule "src/book_reader_client"]
+	path = src/book_reader_client
+	url = https://github.com/StepanTchynetskyi/book_reader_client.git
