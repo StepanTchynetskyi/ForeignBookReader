@@ -1,4 +1,6 @@
 from db import db
+from sqlalchemy.schema import CheckConstraint
+from sqlalchemy.orm import validates
 
 
 class UserModel(db.Model):
@@ -16,7 +18,7 @@ class UserModel(db.Model):
     def get_user_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
 
-    def save_user_to_db(self):
+    def save_to_db(self):
         db.session.add(self)
         db.session.commit()
 

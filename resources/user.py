@@ -2,10 +2,17 @@ from flask_restful import Resource
 from flask import request
 from models.user import UserModel
 from schemas.user import UserSchema
-from marshmallow import ValidationError
+import bcrypt
 
-from constants import USER_NOT_FOUND, USER_DELETED
-
+from constants import (
+    USER_NOT_FOUND,
+    USER_DELETED,
+    SUCCESSFULLY_AUTORIZED,
+    INVALID_CREDENTIALS,
+    PW_DO_NOT_MATCH,
+    USER_ALREADY_EXISTS,
+    CREATED_SUCCESSFULLY
+)
 user_schema = UserSchema()
 
 
@@ -23,3 +30,29 @@ class User(Resource):
             return {'message': USER_NOT_FOUND}, 404
         user.delete_user_by_id(user_id)
         return {"message": USER_DELETED}, 200
+
+
+class UserRegister(Resource):
+    @classmethod
+    def post(cls):
+        user_json = request.get_json()
+        if user_json['password'] != user_json['password1']:
+            return {'message': PW_DO_NOT_MATCH}, 400
+        user_json['password'] = bcrypt.hashpw(user_json['password'].encode(encoding='UTF-8'), bcrypt.gensalt())
+        user = user_schema.load(user_json)
+        if UserModel.get_user_by_username(user.username):
+            return {'message': USER_ALREADY_EXISTS}, 400
+        user.save_to_db()
+
+        return {'message': CREATED_SUCCESSFULLY}, 201
+
+
+class UserLogin(Resource):
+    @classmethod
+    def get(cls):
+        user_json = request.get_json()
+        user_data = user_schema.load(user_json)
+        user = UserModel.get_user_by_username(user_data.username)
+        if user and bcrypt.checkpw(user_data.password, user.password):
+            return {'message': SUCCESSFULLY_AUTORIZED}, 200
+        return {"message": INVALID_CREDENTIALS}, 401
