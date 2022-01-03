@@ -2,9 +2,10 @@ import os
 
 from flask import Flask, jsonify
 from flask_restful import Api
+from flask_cors import CORS
 from marshmallow import ValidationError
 
-from db import db
+from db import db, migrate
 from ma import ma
 
 from resources.user import UserRegister, UserLogin, User
@@ -13,13 +14,14 @@ app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["PROPAGATE_EXCEPTIONS"] = True
+CORS(app)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 api = Api(app)
 db.init_app(app)
 ma.init_app(app)
-
+migrate.init_app(app, db)
 
 @app.before_first_request
 def create_tables():

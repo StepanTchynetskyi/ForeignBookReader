@@ -1,22 +1,20 @@
 from db import db
-from sqlalchemy.schema import CheckConstraint
-from sqlalchemy.orm import validates
 
 
 class UserModel(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), nullable=False, unique=True)
-    password = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(90), nullable=False, unique=True)
+    password = db.Column(db.LargeBinary(), nullable=False)
 
     @classmethod
     def find_by_id(cls, user_id):
         return cls.query.filter_by(id=user_id).first()
 
     @classmethod
-    def get_user_by_username(cls, username):
-        return cls.query.filter_by(username=username).first()
+    def get_user_by_email(cls, email):
+        return cls.query.filter_by(email=email).first()
 
     def save_to_db(self):
         db.session.add(self)
@@ -26,8 +24,8 @@ class UserModel(db.Model):
         db.session.delete(self)
         db.session.commit()
 
-    def change_user_name(self, username):
-        self.username = username
+    def change_user_name(self, email):
+        self.email = email
         db.session.commit()
 
     def change_user_password(self, password):

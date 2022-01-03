@@ -36,11 +36,12 @@ class UserRegister(Resource):
     @classmethod
     def post(cls):
         user_json = request.get_json()
-        if user_json['password'] != user_json['password1']:
-            return {'message': PW_DO_NOT_MATCH}, 400
-        user_json['password'] = bcrypt.hashpw(user_json['password'].encode(encoding='UTF-8'), bcrypt.gensalt())
         user = user_schema.load(user_json)
-        if UserModel.get_user_by_username(user.username):
+        if user_json['password'] != user_json.get('password1', None):
+            return {'message': PW_DO_NOT_MATCH}, 400
+        user.password = bcrypt.hashpw(user.password.encode(encoding='UTF-8'), bcrypt.gensalt())
+
+        if UserModel.get_user_by_email(user.email):
             return {'message': USER_ALREADY_EXISTS}, 400
         user.save_to_db()
 
@@ -49,10 +50,10 @@ class UserRegister(Resource):
 
 class UserLogin(Resource):
     @classmethod
-    def get(cls):
+    def post(cls):
         user_json = request.get_json()
         user_data = user_schema.load(user_json)
-        user = UserModel.get_user_by_username(user_data.username)
-        if user and bcrypt.checkpw(user_data.password, user.password):
+        user = UserModel.get_user_by_email(user_data.email)
+        if user and bcrypt.checkpw(user_data.password.encode(encoding='UTF-8'), user.password):
             return {'message': SUCCESSFULLY_AUTORIZED}, 200
         return {"message": INVALID_CREDENTIALS}, 401
